@@ -1,0 +1,229 @@
+
+1)Practice 1
+
+•Create a table named MESSAGES (err_message VARCHAR2(250))
+•Write a PL/SQL block that accepts a salary value from a user and displays name of the employee having the salary value, on the screen. 
+•If the salary entered returns more than one row, handle the exception with an appropriate Exception handler and insert into the MESSAGES table the message
+ “ More than one employee with salary of <input salary>”
+•If the salary entered does not return any  rows, handle the exception with an appropriate Exception handler and insert into the MESSAGES table the message
+ “ No employee with salary of < input salary>”
+•If the salary entered returns only one row, insert into the MESSAGES table the employees name 
+•Handle any other exception with an appropriate Exception handler and insert into the MESSAGES table the message “ Some other error occurred”
+
+
+
+ create table MESSAGES(err_msg varchar2(250);  
+
+
+
+declare
+salary number:=&salary;
+a emp.ename%type;
+
+begin
+
+select ename into a from emp where sal=salary;
+dbms_output.put_line(a|| ' have the salary ' ||salary);
+
+insert into messages values (a);
+exception
+when no_data_found then
+dbms_output.put_line('no employee with salary of ' || salary);
+insert into messages values ('no employee with salary of ' || salary);
+
+when too_many_rows then
+dbms_output.put_line('too many rows' || 'More than one employee with slary of' || salary);
+insert into messages values ('too many rows' || 'More than one employee with slary of' || salary);
+
+when others then
+dbms_output.put_line('some other error occured');
+insert into messages values ('some other error occured');
+
+end;
+/
+
+==================================================================================================
+
+2)Practice 2
+
+•Write a PL/SQL block that accepts all the column values for departments table as user inputs and inserts a record in the departments table. The block should give a name DUPLICATE_DEPT to the error for duplicate value of the primary key, department_id. (Use pragma EXCEPTION_INIT) The block should write a handler for handling the exception fired when a duplicated value is entered for department_id. The handler should have code for displaying an appropriate message on the screen when DUPLICATE_DEPT is fired.
+
+
+declare
+
+DUPLICATE_DEPT exception;
+deptr dept%rowtype;
+n number:=&n;
+name varchar2(20):='&name';
+location varchar2(20):='&location';
+pragma exception_init(DUPLICATE_DEPT,-00001);
+
+begin
+
+insert into dept values(n,name,location);
+
+dbms_output.put_line('values are duplicated please try again later');
+
+end;
+/
+
+==============================================================================================
+
+3)Practice 3
+
+•Write a PL/SQL BLOCK to check for more than one President Job in the “employees” table. Create a user defined exception named DUPLICATE_PRESIDENT that should be raised when more than one President is found in the “employees” table. The block should handle the exception by displaying a message “MORE THAN ONE PRESIDENT” on the screen.
+
+
+
+declare
+
+DUPLICATE_PRECIDENT exception;
+pragma exception_init(DUPLICATE_PRECIDENT,-01422);
+
+x emp%rowtype;
+begin
+select * into x from emp;
+
+dbms_output.put_line('no error');
+
+exception
+when DUPLICATE_PRECIDENT then
+
+dbms_output.put_line('error');
+
+end;
+/
+
+
+==================================================================================================
+
+4)Practice 4
+•Write a PL/SQL block that accepts the employee_id of two employees as two user inputs empno1 and empno2. If empno1 exists in the “employees” table, then the block increases the salary of the employee by 10%. If empno2 exists in the “employees” table then the block increases his salary by 20%. The block should raise and handle the errors if empno1 or empno2 or both do not exist, by displaying the appropriate messages. Note that if empno1 does not exist but empno2 exists then the salary of empno2 must be increased. Also when both empno1 and empno2 do not exist then the error must be handled by the block.
+
+
+declare
+empno1 number:=&num1;
+empno2 number:=&num2;
+sal1 number;
+sal2 number;
+
+begin
+	begin
+	select sal into sal1 from emp where empno=empno1;
+	update emp set sal=sal*1.1 where empno=empno1;
+
+	exception
+	when no_data_found then
+	dbms_output.put_line('sorry no employee with empno ' ||empno1);
+	end;
+
+select sal into sal2 from emp where empno=empno2;
+update emp set sal=sal*1.2 where empno=empno2;
+
+exception
+when no_data_found then
+dbms_output.put_line('sorry no employee with empno ' ||empno2);
+	
+end;
+
+/
+
+==================================================================================
+Practice 5
+Write a PLSQL block which takes Movie booking details as input from the user and inserts a record in the booking table after doing the following validation
+oBook_id should be unique
+oWant to book for today 
+oPerson_booked is the user itself
+otheartre_id, movie_id, show_id should be valid
+oNo_of_tickets are 2
+
+Raise a user defined exception for each of the above validations, display appropriate error message and terminate the program
+
+
+declare
+	bk booking.book_id%type;
+	ct number;
+	not_unique_id exception;
+	dt booking.booking_date%type;
+	invalid_date exception;
+	name varchar2(30);
+	theater booking.theartre_id%type;
+	tid number;
+	invalid_theater exception;
+	movie booking.movie_id%type;
+	mid number;
+	invalid_movie exception;
+	show booking.show_id%type;
+	sid number;
+	invalid_show exception;
+	tickets number;
+	more_tickets exception;
+
+ANS-
+
+begin
+	bk:=&bookingno;
+	select count(*) into ct from booking where book_id=bk;
+	if ct > 0 then
+		raise not_unique_id;
+	end if;
+	
+	dt:=to_date('&date','DD-MM-YYYY');
+	dbms_output.put_line(dt);
+	select sysdate into sysdt from dual;
+	dbms_output.put_line(sysdt);
+	if (trunc(dt) != trunc(sysdt)) then
+		raise invalid_date;
+	end if;
+
+	name:=&booking_name;
+	
+	theater:='&theater_id';
+	select count(theatre_id) into tid from theatre where theatre_id = theater;
+	if tid != 1 then
+		raise invalid_theater;
+	end if;
+
+	movie:='&movie_id';
+	select count(movie_id) into mid from movie_details where movie_id = movie;
+	if mid != 1 then
+		raise invalid_movie;
+	end if;
+
+	show:=&show_id;
+	select count(show_id) into sid from show where show_id = show;
+	if sid != 1 then
+		raise invalid_show;
+	end if;
+
+	tickets:=&no_of_tickets;
+	if tickets > 2 then
+		raise more_tickets;
+	end if;
+
+	insert into book values (bk,name,dt,theater,movie,show,tickets);
+
+exception
+	when not_unique_id then
+	dbms_output.put_line('Booking ID should be unique');
+	when invalid_date then
+	dbms_output.put_line('Booking allowed only for today');
+	when invalid_theater then
+	dbms_output.put_line('Invalid Theater');
+	when invalid_movie then
+	dbms_output.put_line('Invalid Movie');
+	when invalid_show then
+	dbms_output.put_line('Invalid Show');
+	when more_tickets then
+	dbms_output.put_line('Maximum of 2 tickets can be booked');
+end;
+/
+
+
+
+
+
+
+
+
+
